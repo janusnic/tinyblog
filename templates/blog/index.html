@@ -19,6 +19,11 @@
         {% else %}
             <strong>There are no posts present.</strong>
         {% endif %}
+        {% if user.is_authenticated %}
+<h1>Janus says... hello {{ user.username }}!</h1>
+{% else %}
+<h1>Janus says... hello world!</h1>
+{% endif %}
         <div id="postslist">
                 {% for post in posts %}
                 <p><a href="/blog/posts/{{ post.slug }}/">{{ post.title }}</a></p>
