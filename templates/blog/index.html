@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+ {% block content %}
+        <h1>Blog says...</h1>
+        {% if categories %}
+            <ul>
+                {% for category in categories %}
+                <li>{{ category.name }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <strong>There are no categories present.</strong>
+        {% endif %}
+        {% if posts %}
+            <ul>
+                {% for post in posts %}
+                <li>{{ post.title }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <strong>There are no posts present.</strong>
+        {% endif %}
+        <div id="postslist">
+                {% for post in posts %}
+                <p><a href="/blog/posts/{{ post.slug }}/">{{ post.title }}</a></p>
+                {% endfor %}
+        </div>
+ {% endblock %}

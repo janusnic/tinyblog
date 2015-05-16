@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+        <div id="singlepost">
+                <p>Title: {{ post.title }}</p>
+                <p>Body: {{ post.body }}</p>
+                <p>Category: <a href="/blog/categories/{{ post.categoty.slug }}/">{{ post.categoty }}</a></p>
+        </div>
+{% endblock %}
