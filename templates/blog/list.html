@@ -1,11 +1,9 @@
 {% extends 'base.html' %}
-{% load listlastnews %}
-{% block sidebar %}
+
     <style type="text/css">
         #sidebar { float: right; border: 1px dotted #ccc; padding: 4px; }
     </style>
     <div id="sidebar">
-    {% lastnews %}
         Monthly Archive<br />
         {% for month in months %}
             <a href="/blog/month/{{ month.0 }}/{{month.1 }}/">{{ month.2 }}</a> <br />
@@ -13,27 +11,21 @@
     </div>
 {% endblock %}
 
- {% block content %}
-        <h1>Blog says...</h1>
-        {% if categories %}
+{% block content %}
+
+    <!-- Posts  -->
+    <ul>
+        {% for post in posts %}
+            <div class="title">{{ post.title }}</div>
             <ul>
-                {% for category in categories %}
-                <li>{{ category.name }}</li>
-                {% endfor %}
+                <div class="time">{{ post.created }}</div>
+                <div class="body">{{ post.body|linebreaks }}</div>
+                
             </ul>
-        {% else %}
-            <strong>There are no categories present.</strong>
-        {% endif %}
-        {% if posts %}
-            <ul>
-                {% for post in posts %}
-                <li>{{ post.title }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <strong>There are no posts present.</strong>
-        {% endif %}
-<!-- Next/Prev page links  -->
+        {% endfor %}
+    </ul>
+
+    <!-- Next/Prev page links  -->
         {% if posts.object_list and posts.paginator.num_pages > 1 %}
         <div class="pagination" style="margin-top: 20px; margin-left: -20px; ">
             <span class="step-links">
@@ -51,15 +43,4 @@
             </span>
         </div>
         {% endif %}
-        
-        {% if user.is_authenticated %}
-<h1>Janus says... hello {{ user.username }}!</h1>
-{% else %}
-<h1>Janus says... hello world!</h1>
-{% endif %}
-        <div id="postslist">
-                {% for post in posts %}
-                <p><a href="/blog/posts/{{ post.slug }}/">{{ post.title }}</a></p>
-                {% endfor %}
-        </div>
- {% endblock %}
+{% endblock %}

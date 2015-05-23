@@ -1,32 +1,139 @@
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
 
-from blog.models import Category, Post
-from blog.forms import UserForm, UserProfileForm
+from blog.models import Category, Post, Comment
+from blog.forms import UserForm, UserProfileForm, CategoryForm, CommentForm
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.template.context_processors import csrf
 
-import datetime
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from django.core.urlresolvers import reverse
+
+#import datetime
+
+import time
+from calendar import month_name
+
+def mkmonth_lst():
+    """Make a list of months to show archive links."""
+
+    if not Post.objects.count(): return []
+
+    # set up vars
+    year, month = time.localtime()[:2]
+    first = Post.objects.order_by("created")[0]
+    fyear = first.created.year
+    fmonth = first.created.month
+    months = []
+
+    # loop over years and months
+    for y in range(year, fyear-1, -1):
+        start, end = 12, 0
+        if y == year: start = month
+        if y == fyear: end = fmonth-1
+
+        for m in range(start, end, -1):
+            months.append((y, m, month_name[m]))
+    return months
+
+def month(request, year, month):
+    """Monthly archive."""
+
+    posts = Post.objects.filter(created__year=year, created__month=month)
+    #posts = Post.objects.all().order_by("-created")
+    paginator = Paginator(posts, 2)
+    
+       
+    try: page = int(request.GET.get("page", '1'))
+    except ValueError: page = 1
+
+    try:
+        posts = paginator.page(page)
+    except (InvalidPage, EmptyPage):
+        posts = paginator.page(paginator.num_pages)
+    return render_to_response("blog/list.html", dict(posts=posts, user=request.user,
+                                                months=mkmonth_lst(), archive=True))
 
 def index(request):
-	category_list = Category.objects.order_by('name')
-	post_list = Post.objects.order_by('title')
-	context_dict = {'categories': category_list, 'posts': post_list}
-	return render(request, 'blog/index.html', context_dict)
+    category_list = Category.objects.order_by('name')
+    """Main listing."""
+    posts = Post.objects.all().order_by("-created")
+    paginator = Paginator(posts, 2)
+    
+    try: page = int(request.GET.get("page", '1'))
+    except ValueError: page = 1
+
+    try:
+        posts = paginator.page(page)
+    except (InvalidPage, EmptyPage):
+        posts = paginator.page(paginator.num_pages)
+
+    context_dict = {'categories': category_list, 'posts': posts, 'months':mkmonth_lst()}
+    return render_to_response("blog/index.html", context_dict)
+
+    # post_list = Post.objects.order_by('title')
+	# return render(request, 'blog/index.html', context_dict)
 
 def view(request, postslug):
-	post = Post.objects.get(slug=postslug)
-	context = {'post': post}
-	return render_to_response('blog/singlepost.html', context)
+    post = Post.objects.get(slug=postslug)
+    comments = Comment.objects.filter(post=post)
+    context = {'post': post, "comments":comments,"form":CommentForm(), "user":request.user}
+    context.update(csrf(request))
+    return render_to_response('blog/singlepost.html', context)
 
 def category(reqeust, categoryslug):
-	cat = Category.objects.get(slug=categoryslug)
-	posts = Post.objects.filter(categoty=cat)
-	context = {'posts': posts}
-	return render_to_response('blog/singlecategory.html', context)
+    cat = Category.objects.get(slug=categoryslug)
+    category_list = Category.objects.order_by('name')
+    posts = Post.objects.filter(category=cat)
+    context = {'posts': posts,'categories': category_list}
+    return render_to_response('blog/singlecategory.html', context)
 
-	
+def add_comment(request, postslug):
+    """Add a new comment."""
+    p = request.POST
+
+    if p["body"]:
+        
+        author = request.user
+
+        comment = Comment(post=Post.objects.get(slug=postslug))
+        cf = CommentForm(p, instance=comment)
+        
+        cf.fields["author"].required = False
+
+        comment = cf.save(commit=False)
+        comment.author = author
+        comment.save()
+    
+    return HttpResponseRedirect('/blog/')
+
+def add_category(request):
+    # A HTTP POST?
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+
+        # Have we been provided with a valid form?
+        if form.is_valid():
+            # Save the new category to the database.
+            form.save(commit=True)
+
+            # Now call the index() view.
+            # The user will be shown the homepage.
+            return index(request)
+        else:
+            # The supplied form contained errors - just print them to the terminal.
+            print (form.errors)
+    else:
+        # If the request was not a POST, display the form to enter details.
+        form = CategoryForm()
+
+    # Bad form (or form details), no form supplied...
+    # Render the form with error messages (if any).
+    return render(request, 'blog/add_category.html', {'form': form})	
+
 def register(request):
 
     # A boolean value for telling the template whether the registration was successful.

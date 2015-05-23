@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
+		<h3>categories</h3>
+        {% for cat in categories %}
+         <p>{{ cat.name }}</p>
+        {% endfor %}
+        
         <div id="categorieslist">
                 <h2>Category {{ posts.0.categoty }}</h2>
                 {% for post in posts %}
