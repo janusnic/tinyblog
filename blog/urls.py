@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^login/$', 'blog.views.ulogin', name='login'),
     url(r'^restricted/', 'blog.views.restricted', name='restricted'),
     url(r'^logout/$', 'blog.views.user_logout', name='logout'),
+    url(r'^pages/(?P<pageslug>.*)/$', 'blog.views.page'),
     #url(r'^search-form/$', views.search_form),
     #url(r'^search/$', views.search),
 ]

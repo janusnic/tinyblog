@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+        <div id="singlepage">
+                <p>Title: {{ page.title }}</p>
+                <p>Body: {{ page.content }}</p>
+                {% if page.featured_image %}
+                <img src="/media/{{ page.featured_image }}" title="{{ page.title }}" />
+                {% endif %}
+
+ </div>
+{% endblock %}

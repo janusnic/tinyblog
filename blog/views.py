@@ -1,6 +1,6 @@
 from django.shortcuts import render, render_to_response
 
-from blog.models import Category, Post, Comment
+from blog.models import Category, Post, Comment, Page
 from blog.forms import UserForm, UserProfileForm, CategoryForm, CommentForm
 
 from django.contrib.auth import authenticate, login
@@ -83,6 +83,11 @@ def view(request, postslug):
     context = {'post': post, "comments":comments,"form":CommentForm(), "user":request.user}
     context.update(csrf(request))
     return render_to_response('blog/singlepost.html', context)
+
+def page(request, pageslug):
+    page = Page.objects.get(slug=pageslug)
+    context = {'page': page, "user":request.user}
+    return render_to_response('blog/page.html', context)
 
 def category(reqeust, categoryslug):
     cat = Category.objects.get(slug=categoryslug)
